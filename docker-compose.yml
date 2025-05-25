@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: kanji-postgres
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - kanji-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kanji_user -d kanji_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kanji-network
+
+  migrate:
+    image: node:18-alpine
+    volumes:
+      - ./prisma:/app/prisma
+      - ./data:/app/data
+      - ./.env:/app/.env
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+    networks:
+      - kanji-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "cd /app && npm install && npx prisma generate && export $(grep -v '^#' .env | xargs) && npx prisma migrate dev --name init && node prisma/seed.cjs"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./nextjs:/app/nextjs
+      - ./prisma:/app/prisma
+      - ./data:/app/data
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./nextjs/tsconfig.json:/app/nextjs/tsconfig.json
+      - ./eslint.config.mjs:/app/eslint.config.mjs
+      - node_modules:/app/node_modules
+    networks:
+      - kanji-network
+
+networks:
+  kanji-network:
+    driver: bridge
+
+volumes:
+  kanji-postgres-data:
+  node_modules:

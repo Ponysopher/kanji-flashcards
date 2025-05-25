@@ -1,0 +1,7 @@
+node_modules
+.next
+dist
+prisma/migrations
+Dockerfile
+docker-compose.yml
+docker-compose.staging.yml

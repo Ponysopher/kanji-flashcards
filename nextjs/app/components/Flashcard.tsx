@@ -5,7 +5,7 @@ interface iFlashCard {
     onClick?: () => void;
 }
 
-const Flashcard = ({yomikata, kanji, isRevealed, onClick}: iFlashCard) => {
+const Flashcard = ({ yomikata, kanji, isRevealed, onClick }: iFlashCard) => {
   return (
     <div
         onClick={onClick}
