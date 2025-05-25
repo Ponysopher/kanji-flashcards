@@ -2,17 +2,19 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm install
+COPY . .
 
-COPY nextjs ./nextjs
-COPY prisma ./prisma
-COPY data ./data
-COPY tsconfig.json eslint.config.mjs .env ./
-COPY nextjs/tsconfig.json ./nextjs/tsconfig.json
+# Set env before installing
+ENV NODE_ENV=production
+
+# Use `npm ci` for clean install of only prod dependencies
+RUN npm ci --omit=dev
+
+RUN npm install
 
 RUN npx prisma generate
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "cd /app/nextjs && export $(grep -v '^#' /app/.env | xargs) && npm run build && npm run start"]
+RUN npm run build
+CMD ["npm", "run", "start"]

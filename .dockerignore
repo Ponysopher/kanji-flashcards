@@ -1,7 +1,9 @@
 node_modules
+.git
 .next
 dist
 prisma/migrations
 Dockerfile
 docker-compose.yml
 docker-compose.staging.yml
+README.md
